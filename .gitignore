@@ -1,0 +1,7 @@
+node_modules/
+helper/config.json
+helper/config.json.tmp
+*.log
+.DS_Store
+shots/
+tools/node_modules/

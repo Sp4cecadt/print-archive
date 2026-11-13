@@ -1,0 +1,28 @@
+{
+  "helperName": "Home MacBook Pro",
+  "host": "0.0.0.0",
+  "port": 8787,
+  "archiveDir": "~/Print Archive",
+  "stlWatchDir": "~/3D Models",
+  "apiToken": "",
+  "printer": {
+    "name": "X1C",
+    "ip": "192.168.1.64",
+    "serial": "PUT-YOUR-PRINTER-SERIAL-HERE",
+    "accessCode": "PUT-YOUR-LAN-ACCESS-CODE-HERE"
+  },
+  "capture": {
+    "autoArchive": true,
+    "archiveFailed": true,
+    "keepThumbnails": true,
+    "captureOnStartIfFinished": true,
+    "copyStl": true
+  },
+  "reprint": {
+    "remoteDir": "/",
+    "urlTemplate": "ftp:///{file}",
+    "bedLevelling": true,
+    "timelapse": false,
+    "bedType": "auto"
+  }
+}

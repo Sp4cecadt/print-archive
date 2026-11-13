@@ -1,0 +1,38 @@
+// Live-mode interaction check against the mock helper: notes persist, filters work, reprint confirm sends.
+const puppeteer = require('puppeteer-core');
+const base = process.argv[2];
+(async () => {
+  const b = await puppeteer.launch({ executablePath: '/usr/bin/google-chrome', args: ['--no-sandbox'] });
+  const p = await b.newPage(); const errors = [];
+  p.on('pageerror', e => errors.push(e.message));
+  await p.setViewport({ width: 440, height: 956, deviceScaleFactor: 1, isMobile: true, hasTouch: true });
+  await p.goto(base + '#/library', { waitUntil: 'networkidle0' });
+  const out = {};
+  out.mode = await p.evaluate(() => window.PA.S.mode);
+  await p.select('select[data-filter="label"]', 'stl'); await new Promise(r => setTimeout(r, 200));
+  out.stlCount = await p.$eval('.lib-count', e => e.textContent);
+  await p.select('select[data-filter="status"]', 'failed'); await new Promise(r => setTimeout(r, 200));
+  out.stlFailed = await p.$eval('.lib-count', e => e.textContent);
+  await p.click('[data-act="clear-filters"]');
+  await p.type('#q', 'hook'); await new Promise(r => setTimeout(r, 200));
+  out.searchHook = await p.$eval('.lib-count', e => e.textContent);
+  const id = await p.evaluate(() => window.PA.S.prints.find(x => x.name === 'Tool hook').id);
+  await p.goto(base + '#/print/' + encodeURIComponent(id), { waitUntil: 'networkidle0' });
+  await p.click('#notes'); await p.type('#notes', 'Orange PLA, reprint at 0.16 mm.');
+  await p.evaluate(() => document.activeElement.blur()); await new Promise(r => setTimeout(r, 800));
+  await p.reload({ waitUntil: 'networkidle0' });
+  out.notesAfterReload = await p.$eval('#notes', e => e.value);
+  await p.click('[data-act="reprint"]'); await new Promise(r => setTimeout(r, 300));
+  out.warning = await p.$eval('.sheet', e => (e.querySelector('.warn strong') || {}).textContent || null);
+  await p.click('[data-act="confirm-reprint"]');
+  await p.waitForSelector('#sheet-result .ok-box, #sheet-result .warn', { timeout: 20000 });
+  out.reprintResult = await p.$eval('#sheet-result', e => e.innerText);
+  await p.screenshot({ path: '../shots/live-mock-06-reprint-sent.png' });
+  await p.goto(base + '#/settings', { waitUntil: 'networkidle0' });
+  await p.click('[data-act="test"]'); await p.waitForSelector('.conn-line', { timeout: 10000 }); await new Promise(r => setTimeout(r, 300));
+  out.test = await p.$eval('.conn-line', e => e.textContent);
+  out.sw = await p.evaluate(() => window.PA.S.swCache);
+  out.errors = errors;
+  console.log(JSON.stringify(out, null, 1));
+  await b.close();
+})();
